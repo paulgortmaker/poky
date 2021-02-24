@@ -2649,6 +2649,14 @@ system and gives an overview of their function and contents.
    :term:`GDB`
       The minimal command and arguments to run the GNU Debugger.
 
+   :term:`GITCLONEARGS`
+      The arguments used to "git clone" when cloning a repo from an
+      an external server into the local download area.  The default is
+      "--bare --mirror".  Use of "--bare --single-branch --branch foo"
+      will limit what is cloned/downloaded just to the branch/tag "foo".
+      An URL specific GITCLONEARGS_<name> will take precedence over a
+      recipe wide GITCLONEARGS setting, if both are present.
+
    :term:`GITDIR`
       The directory in which a local copy of a Git repository is stored
       when it is cloned.
