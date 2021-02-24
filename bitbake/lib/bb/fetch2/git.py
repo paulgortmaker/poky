@@ -18,6 +18,13 @@ Supported SRC_URI options are:
    SRCREV_nameX = "xxxxxxxxxxxxxxxxxxxx"
    SRCREV_nameY = "YYYYYYYYYYYYYYYYYYYY"
 
+- dlname
+   The download name used in downloads/git2 (or GITDIR).  This will override
+   the automatically constructed name component from "thispath" for the URL
+   git://some.host/thispath to the user specified value.  The component from
+   "some.host" remains unaffected.  Allows splitting of one repo into multiple
+   independent download dirs.
+
 - tag
     The git tag to retrieve. The default is "master"
 
@@ -151,6 +158,8 @@ class Git(FetchMethod):
 
         ud.nobranch = ud.parm.get("nobranch","0") == "1"
 
+        ud.dlname = ud.parm.get("dlname","")
+
         # usehead implies nobranch
         ud.usehead = ud.parm.get("usehead","0") == "1"
         if ud.usehead:
@@ -242,7 +251,11 @@ class Git(FetchMethod):
                     ud.unresolvedrev[name] = ud.revisions[name]
                 ud.revisions[name] = self.latest_revision(ud, d, name)
 
-        gitsrcname = '%s%s' % (ud.host.replace(':', '.'), ud.path.replace('/', '.').replace('*', '.').replace(' ','_'))
+        if ud.dlname:
+            gitdlname = ud.dlname.replace('/', '.').replace('*', '.').replace(' ','_')
+        else:
+            gitdlname = ud.path.replace('/', '.').replace('*', '.').replace(' ','_')
+        gitsrcname = '%s%s' % (ud.host.replace(':', '.'), gitdlname)
         if gitsrcname.startswith('.'):
             gitsrcname = gitsrcname[1:]
 

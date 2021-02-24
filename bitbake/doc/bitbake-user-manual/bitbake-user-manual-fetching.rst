@@ -417,6 +417,12 @@ This fetcher supports the following parameters:
    is assumed to be "master". The number of branch parameters much match
    the number of name parameters.
 
+-  *"dlname":* The download name used in downloads/git2 (or GITDIR).  If
+    specified,  this will override the automatically constructed name
+    component from "thispath" for the URL git://some.host/thispath to the
+    user specified value.  The component from "some.host" remains unaffected.
+    Allows splitting of one repo into multiple independent download dirs.
+
 -  *"rev":* The revision to use for the checkout. The default is
    "master".
 
