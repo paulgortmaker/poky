@@ -54,6 +54,11 @@ Supported SRC_URI options are:
    referring to commit which is valid in tag instead of branch.
    The default is "0", set nobranch=1 if needed.
 
+- static
+   Repository is of fixed/static content with no active/new development.
+   Once cloned, nothing will change, so optimize accordingly.  The default
+   is "0", set static=1 when appropriate.
+
 - usehead
    For local git:// urls to use the current branch HEAD as the revision for use with
    AUTOREV. Implies nobranch.
@@ -158,6 +163,8 @@ class Git(FetchMethod):
 
         ud.nobranch = ud.parm.get("nobranch","0") == "1"
 
+        ud.static = ud.parm.get("static","0") == "1"
+
         ud.dlname = ud.parm.get("dlname","")
 
         # usehead implies nobranch
@@ -166,6 +173,10 @@ class Git(FetchMethod):
             if ud.proto != "file":
                  raise bb.fetch2.ParameterError("The usehead option is only for use with local ('protocol=file') git repositories", ud.url)
             ud.nobranch = 1
+
+        if ud.static:
+            if ud.rebaseable:
+                 raise bb.fetch2.ParameterError("The rebaseable option is incompatible with the static option", ud.url)
 
         # bareclone implies nocheckout
         ud.bareclone = ud.parm.get("bareclone","0") == "1"
@@ -311,6 +322,8 @@ class Git(FetchMethod):
     def clonedir_need_update(self, ud, d):
         if not os.path.exists(ud.clonedir):
             return True
+        if ud.static:
+            return False
         if ud.shallow and ud.write_shallow_tarballs and self.clonedir_need_shallow_revs(ud, d):
             return True
         for name in ud.names:
@@ -341,6 +354,17 @@ class Git(FetchMethod):
             return False
         return True
 
+    def get_git_config(self, ud, d, repo, cfgvar):
+        try:
+            output = runfetchcmd("%s config --get %s" % (ud.basecmd, cfgvar), d, workdir=repo)
+        except (bb.fetch2.FetchError,ValueError):
+            return ""
+        return output.split()[0]
+
+    def repo_is_static(self, ud, d, repo):
+        static = self.get_git_config(ud, d, repo, "bitbake.static")
+        return (static == "true")
+
     def download(self, ud, d):
         """Fetch url"""
 
@@ -367,6 +391,9 @@ class Git(FetchMethod):
                 bb.fetch2.check_network_access(d, clone_cmd, ud.url)
             progresshandler = GitProgressHandler(d)
             runfetchcmd(clone_cmd, d, log=progresshandler)
+
+            if ud.static:
+                runfetchcmd("%s config --bool --add bitbake.static 1" % ud.basecmd, d, workdir=ud.clonedir)
 
         # Update the checkout if needed
         if self.clonedir_need_update(ud, d):

@@ -426,6 +426,11 @@ This fetcher supports the following parameters:
 -  *"rev":* The revision to use for the checkout. The default is
    "master".
 
+-  *"static":* The repository is a "one and done" - clone/untar and the
+   content is static and unchanging.  This allows optimizations like
+   skipping fetch/pull and doing "ls-remote" on servers.  Typically used
+   for repositories that will act as a commit library for other repos.
+
 -  *"tag":* Specifies a tag to use for the checkout. To correctly
    resolve tags, BitBake must access the network. For that reason, tags
    are often not used. As far as Git is concerned, the "tag" parameter
