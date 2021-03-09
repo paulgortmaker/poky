@@ -362,7 +362,8 @@ class Git(FetchMethod):
               runfetchcmd("%s remote rm origin" % ud.basecmd, d, workdir=ud.clonedir)
 
             runfetchcmd("%s remote add --mirror=fetch origin %s" % (ud.basecmd, shlex.quote(repourl)), d, workdir=ud.clonedir)
-            fetch_cmd = "LANG=C %s fetch -f --progress %s refs/*:refs/*" % (ud.basecmd, shlex.quote(repourl))
+            fetchrefs = d.getVar('GITFETCHREFS_' + ud.names[0]) or d.getVar('GITFETCHREFS') or "refs/*:refs/*"
+            fetch_cmd = "LANG=C %s fetch -f --progress %s %s" % (ud.basecmd, shlex.quote(repourl), fetchrefs)
             if ud.proto.lower() != 'file':
                 bb.fetch2.check_network_access(d, fetch_cmd, ud.url)
             progresshandler = GitProgressHandler(d)

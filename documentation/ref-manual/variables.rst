@@ -2661,6 +2661,14 @@ system and gives an overview of their function and contents.
       The directory in which a local copy of a Git repository is stored
       when it is cloned.
 
+   :term:`GITFETCHREFS`
+      The refs requested during a "git fetch" when updating a repo from
+      an external server into the local download area.  The default is
+      "refs/*:refs/*".  Used in conjunction with GITCLONEARGS to limit what
+      is cloned/fetched from a repo otherwise dense with branches.  Note
+      that an URL specific GITFETCHREFS_<name> will take precedence over
+      a recipe wide GITFETCHREFS setting, if both are present.
+
    :term:`GLIBC_GENERATE_LOCALES`
       Specifies the list of GLIBC locales to generate should you not wish
       to generate all LIBC locals, which can be time consuming.
