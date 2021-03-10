@@ -14,7 +14,11 @@ python () {
 SRCREV_machine ?= "be2935bce35f9adb6d0e735d42651e81a5094adf"
 SRCREV_meta ?= "031f6c76e488a3563f35258c72ff1de3e25a512e"
 
-SRC_URI = "git://git.yoctoproject.org/linux-yocto.git;branch=${KBRANCH};name=machine \
+KREF = "git.kernel.org.preempt-rt.linux-5.10.y"
+GITFETCHREFS_machine += " refs/heads/v5.10/*:refs/heads/v5.10/*"
+GITCLONEARGS_machine = "--bare --single-branch --branch v5.10/base"
+
+SRC_URI = "git://git.yoctoproject.org/linux-yocto.git;name=machine;branch=${KBRANCH};altref=${KREF} \
            git://git.yoctoproject.org/yocto-kernel-cache;type=kmeta;name=meta;branch=yocto-5.10;destsuffix=${KMETA}"
 
 LINUX_VERSION ?= "5.10.25"
@@ -23,6 +27,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 DEPENDS += "${@bb.utils.contains('ARCH', 'x86', 'elfutils-native', '', d)}"
 DEPENDS += "openssl-native util-linux-native"
+do_fetch[depends] += "linux-rt-5.10:do_fetch"
 
 PV = "${LINUX_VERSION}+git${SRCPV}"
 
