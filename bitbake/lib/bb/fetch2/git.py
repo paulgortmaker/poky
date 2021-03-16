@@ -417,6 +417,15 @@ class Git(FetchMethod):
                 if exc.errno != errno.ENOENT:
                     raise
 
+        # fixup "* (no branch)" from "--single-branch --branch <tag>"
+        if ud.static:
+            output = runfetchcmd("%s show-ref --heads | wc -l" % ud.basecmd, d, workdir=ud.clonedir)
+            headless = output.split()[0] == "0"
+            if headless:
+                runfetchcmd("%s update-ref refs/heads/master HEAD" % ud.basecmd, d, workdir=ud.clonedir)
+                with open(os.path.join(ud.clonedir, "HEAD"), "w") as f:
+                    f.write('ref: refs/heads/master\n')
+
         for name in ud.names:
             if not self._contains_ref(ud, d, name, ud.clonedir):
                 raise bb.fetch2.FetchError("Unable to find revision %s in branch %s even from upstream" % (ud.revisions[name], ud.branches[name]))
