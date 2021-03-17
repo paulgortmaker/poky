@@ -15,6 +15,7 @@ KTAG = "5.10"
 # No split:	1521	epoch->5.10
 # One split:	1730	epoch->4.0, 4.0->5.10 (854+877)
 # Two splits:	1928	epoch->3.8, 3.8->4.12, 4.12->5.10 (628+647+653)
+# Three splits:	2106	epoch->3.3, 3.3->4.3, 4.3->4.18, 4.18->5.10 (536+532+519+520)
 #
 # Download sizes will vary depending on server compression settings.
 
@@ -27,6 +28,9 @@ python __anonymous () {
         return
     if splits == 2:
         d.setVar("KREF", "4.12")
+        return
+    if splits == 3:
+        d.setVar("KREF", "4.18")
         return
     bb.fatal("Unsupported number of v5.10 kernel content splits (%s)." % splits)
 }

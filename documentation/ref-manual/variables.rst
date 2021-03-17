@@ -3441,6 +3441,12 @@ system and gives an overview of their function and contents.
       lines in the example are from individual recipes and show how the
       ``PR`` value is set.
 
+   :term:`INITIAL_KERNEL_SPLIT`
+      Specifies the number of times the initial kernel Git clone should be
+      split in order to avoid one single gigabyte+ download. Supported
+      values are 0 through 3 inclusive, resulting in one through four
+      separate chunks (repositories) in the download dir.
+
    :term:`INCOMPATIBLE_LICENSE`
       Specifies a space-separated list of license names (as they would
       appear in :term:`LICENSE`) that should be excluded
