@@ -453,6 +453,13 @@ This fetcher supports the following parameters:
    is responsible (via fetch dependency) for ensuring the reference is
    populated/cloned prior to being called on to act as a reference.
 
+-  *"packref":* Enables cloned ``git://`` URLs to use packs from the named
+   peer from the downloads dir as if they were their own packs of commit
+   history.  Similar to ``altref`` above, but suited for bare static repos
+   for which no loose objects outside of packs will ever be present.
+   Recipe is responsible (via fetch dependency) for ensuring the reference
+   is populated/cloned prior to being called on to act as a reference.
+
 Here are some example URLs: ::
 
    SRC_URI = "git://git.oe.handhelds.org/git/vip.git;tag=version-1"

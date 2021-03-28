@@ -65,6 +65,14 @@ Supported SRC_URI options are:
    operations.  Recipe is responsible (via fetch dependency) for ensuring the
    reference is populated/cloned prior to being called on to act as a reference.
 
+- packref
+   Repository is to use packs from named peer from downloads dir by linking
+   them into objects/pack/ of the new repository as if they were their own
+   packs of commit history.  Similar to altref above, but suited for bare
+   static repos for which no loose objects outside of packs will be present.
+   Recipe is responsible (via fetch dependency) for ensuring the reference
+   is populated/cloned prior to being called on to act as a reference.
+
 - usehead
    For local git:// urls to use the current branch HEAD as the revision for use with
    AUTOREV. Implies nobranch.
@@ -171,9 +179,14 @@ class Git(FetchMethod):
 
         ud.static = ud.parm.get("static","0") == "1"
 
+        ud.packref = ud.parm.get("packref","")
+
         ud.altref = ud.parm.get("altref","")
 
         ud.dlname = ud.parm.get("dlname","")
+
+        if ud.packref and ud.altref:
+            raise bb.fetch2.ParameterError("Please pick only ONE reference style: alternates OR packs", ud.url)
 
         # usehead implies nobranch
         ud.usehead = ud.parm.get("usehead","0") == "1"
@@ -373,6 +386,14 @@ class Git(FetchMethod):
         static = self.get_git_config(ud, d, repo, "bitbake.static")
         return (static == "true")
 
+    def create_pack_links(self, refname, refdir, dstdir):
+        dstpkdir = os.path.join(dstdir, 'objects', 'pack')
+        refpkdir = os.path.join(refdir, 'objects', 'pack')
+        for item in os.listdir(refpkdir):
+            dst = os.path.join(dstpkdir, item)
+            src = os.path.join('..', '..', '..', refname, 'objects', 'pack', item)
+            os.symlink(src, dst)
+
     def download(self, ud, d):
         """Fetch url"""
 
@@ -388,7 +409,9 @@ class Git(FetchMethod):
 
         repourl = self._get_repo_url(ud)
 
-        refname = ud.altref
+        # Both style of reference are the same for initial clone operation.
+        # It is the post-clone absolute to relative path fixup that differs.
+        refname = ud.altref or ud.packref
         if refname:
             alts = os.path.join(ud.clonedir, 'objects', 'info', 'alternates')
             gitdir = d.getVar("GITDIR") or (d.getVar("DL_DIR") + "/git2")
@@ -418,6 +441,12 @@ class Git(FetchMethod):
 
             if ud.static:
                 runfetchcmd("%s config --bool --add bitbake.static 1" % ud.basecmd, d, workdir=ud.clonedir)
+
+            if ud.packref:
+                if not self.repo_is_static(ud, d, refdir):
+                    raise bb.fetch2.FetchError("Pack reference '%s' is not marked as static content." % refname)
+                self.create_pack_links(refname, refdir, ud.clonedir)
+                os.remove(alts)
 
         # Update the checkout if needed
         if self.clonedir_need_update(ud, d):
