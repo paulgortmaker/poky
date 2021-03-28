@@ -386,6 +386,21 @@ class Git(FetchMethod):
         static = self.get_git_config(ud, d, repo, "bitbake.static")
         return (static == "true")
 
+    def rename_packs(self, ud, d, repo):
+        # Use git pack naming similar to pre v1.8 - where the name only
+        # depends on the objects within, not objs + compression artifacts.
+        pkdir = os.path.join(repo, 'objects', 'pack')
+
+        for idx in fnmatch.filter(os.listdir(pkdir), "*.idx"):
+            pk = os.path.join(pkdir, idx[:-3] + "pack")
+            idx = os.path.join(pkdir, idx)
+            # insert "xxd -p -r" before the sha1sum to get exactly v1.7 names.
+            cmd = "%s show-index < %s | cut -d' ' -f2 | sort | sha1sum" % (ud.basecmd, idx)
+            output = runfetchcmd(cmd, d, workdir=repo)
+            newname = os.path.join(pkdir, "pack-" + output[:40])
+            os.rename(pk, newname + ".pack")
+            os.rename(idx, newname + ".idx")
+
     def create_pack_links(self, refname, refdir, dstdir):
         dstpkdir = os.path.join(dstdir, 'objects', 'pack')
         refpkdir = os.path.join(refdir, 'objects', 'pack')
@@ -441,6 +456,7 @@ class Git(FetchMethod):
 
             if ud.static:
                 runfetchcmd("%s config --bool --add bitbake.static 1" % ud.basecmd, d, workdir=ud.clonedir)
+                self.rename_packs(ud, d, ud.clonedir)
 
             if ud.packref:
                 if not self.repo_is_static(ud, d, refdir):
