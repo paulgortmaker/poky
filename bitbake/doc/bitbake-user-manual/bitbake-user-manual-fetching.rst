@@ -447,6 +447,12 @@ This fetcher supports the following parameters:
    parameter implies no branch and only works when the transfer protocol
    is ``file://``.
 
+-  *"altref":* Enables cloned ``git://`` URLs to use the named peer from
+   the downloads dir as a reference through the standard git alternates
+   file for clone (see ``-reference``) and subseqent operations.  Recipe
+   is responsible (via fetch dependency) for ensuring the reference is
+   populated/cloned prior to being called on to act as a reference.
+
 Here are some example URLs: ::
 
    SRC_URI = "git://git.oe.handhelds.org/git/vip.git;tag=version-1"

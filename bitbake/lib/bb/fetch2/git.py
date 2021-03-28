@@ -59,6 +59,12 @@ Supported SRC_URI options are:
    Once cloned, nothing will change, so optimize accordingly.  The default
    is "0", set static=1 when appropriate.
 
+- altref
+   Repository is to use named peer from downloads dir as a reference through
+   the standard git objects/info/alternates file for clone and subseqent
+   operations.  Recipe is responsible (via fetch dependency) for ensuring the
+   reference is populated/cloned prior to being called on to act as a reference.
+
 - usehead
    For local git:// urls to use the current branch HEAD as the revision for use with
    AUTOREV. Implies nobranch.
@@ -164,6 +170,8 @@ class Git(FetchMethod):
         ud.nobranch = ud.parm.get("nobranch","0") == "1"
 
         ud.static = ud.parm.get("static","0") == "1"
+
+        ud.altref = ud.parm.get("altref","")
 
         ud.dlname = ud.parm.get("dlname","")
 
@@ -380,9 +388,20 @@ class Git(FetchMethod):
 
         repourl = self._get_repo_url(ud)
 
+        refname = ud.altref
+        if refname:
+            alts = os.path.join(ud.clonedir, 'objects', 'info', 'alternates')
+            gitdir = d.getVar("GITDIR") or (d.getVar("DL_DIR") + "/git2")
+            refdir = os.path.join(gitdir, refname)
+            if not os.path.exists(refdir):
+                raise bb.fetch2.FetchError("Unable to find reference %s in %s" % (refname, gitdir))
+
         # If the repo still doesn't exist, fallback to cloning it
         if not os.path.exists(ud.clonedir):
             extcloneargs = d.getVar('GITCLONEARGS_' + ud.names[0]) or d.getVar('GITCLONEARGS') or "--bare --mirror"
+            if refname:
+                extcloneargs += " --reference %s" % refdir
+
             # We do this since git will use a "-l" option automatically for local urls where possible
             if repourl.startswith("file://"):
                 repourl = repourl[7:]
@@ -391,6 +410,11 @@ class Git(FetchMethod):
                 bb.fetch2.check_network_access(d, clone_cmd, ud.url)
             progresshandler = GitProgressHandler(d)
             runfetchcmd(clone_cmd, d, log=progresshandler)
+
+            # Fix up reference to be relative for tarball/mirror portability
+            if ud.altref:
+                with open(alts, "w") as f:
+                    f.write("../../%s/objects\n" % ud.altref)
 
             if ud.static:
                 runfetchcmd("%s config --bool --add bitbake.static 1" % ud.basecmd, d, workdir=ud.clonedir)
