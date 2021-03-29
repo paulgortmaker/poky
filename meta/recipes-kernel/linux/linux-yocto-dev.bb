@@ -19,7 +19,16 @@ include recipes-kernel/linux/linux-yocto-dev-revisions.inc
 KBRANCH = "standard/base"
 KMETA = "kernel-meta"
 
-SRC_URI = "git://git.yoctoproject.org/linux-yocto-dev.git;branch=${KBRANCH};name=machine \
+# When v5.13-rcN comes along, we can revector back to mainline
+#KREF = "git.kernel.org.torvalds.linux-master"
+#do_fetch[depends] += "linux-master:do_fetch"
+KREF = "git.kernel.org.preempt-rt.linux-5.12.y"
+do_fetch[depends] += "linux-rt-5.12:do_fetch"
+
+GITFETCHREFS_machine += " refs/heads/standard/*:refs/heads/standard/*"
+GITCLONEARGS_machine = "--bare --single-branch --branch master"
+
+SRC_URI = "git://git.yoctoproject.org/linux-yocto-dev.git;name=machine;branch=${KBRANCH};altref=${KREF} \
            git://git.yoctoproject.org/yocto-kernel-cache;type=kmeta;name=meta;branch=master;destsuffix=${KMETA}"
 
 # Set default SRCREVs. Both the machine and meta SRCREVs are statically set
