@@ -421,6 +421,15 @@ class Git(FetchMethod):
 
         # Update the checkout if needed
         if self.clonedir_need_update(ud, d):
+            if ud.altref:
+                # if altref changed in SRC_URI then append new value.
+                alts = os.path.join(ud.clonedir, 'objects', 'info', 'alternates')
+                try:
+                    runfetchcmd("grep -q %s %s" % (ud.altref, alts), d, quiet=True, workdir=ud.clonedir)
+                except (bb.fetch2.FetchError,ValueError):
+                    with open(alts, "a") as f:
+                        f.write("../../%s/objects\n" % ud.altref)
+
             output = runfetchcmd("%s remote" % ud.basecmd, d, quiet=True, workdir=ud.clonedir)
             if "origin" in output:
               runfetchcmd("%s remote rm origin" % ud.basecmd, d, workdir=ud.clonedir)
