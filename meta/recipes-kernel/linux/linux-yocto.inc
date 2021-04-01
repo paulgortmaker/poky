@@ -56,3 +56,13 @@ do_install_append(){
 
 # enable kernel-sample for oeqa/runtime/cases's ksample.py test
 KERNEL_FEATURES_append_qemuall=" features/kernel-sample/kernel-sample.scc"
+
+# For linux-yocto-dev, the existing v3.17 based premirror tarball is of no
+# value, and for the non-dev variants, we don't want to be going off and
+# w-getting the 3+ gigabyte (!!!) mirror tarball either, when we've got
+# a shared v5.10 repository already.  We can delete this in the future once
+# these old tarballs are gone.  But really we may never bother to mirror
+# either of them ever again, since they are (a) now small, and (b) leaf
+# nodes at the end of the chain where the content is regularly changing.
+PREMIRRORS = ""
+MIRRORS = ""
